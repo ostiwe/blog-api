@@ -1,0 +1,12 @@
+routes:
+  #  EXAMPLE:
+  #
+  #  route_name:
+  #    content_type: json
+  #    permission:
+  #    token_need: false
+
+  app_auth_login:
+    content_type: json
+    permission:
+    token_need: false
