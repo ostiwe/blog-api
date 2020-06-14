@@ -10,6 +10,7 @@ use App\Entity\Tag;
 use App\Entity\User;
 use Faker\Factory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\Query;
 
@@ -45,9 +46,9 @@ class MainController extends AbstractController
 			$token = (new AccessToken())
 				->setOwner($user)
 				->setMask((int)$user->getMask())
-				->setValue(bin2hex(rand(PHP_INT_MIN, PHP_INT_MAX)))
 				->setCreatedAt(time())
-				->setExpiredAt(time() + 6900);
+				->setExpiredAt(time() + 6900)
+				->generate();
 			$em->persist($token);
 			$tokens++;
 		} while ($tokens < 5);

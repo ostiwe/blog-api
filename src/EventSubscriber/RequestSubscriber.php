@@ -4,6 +4,7 @@ namespace App\EventSubscriber;
 
 use App\Entity\AccessToken;
 use App\ErrorHelper;
+use App\Services\RequestStorage;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,7 +17,18 @@ class RequestSubscriber extends AbstractController implements EventSubscriberInt
 	private Request $request;
 	private $routesConfig;
 	private $needPermission = null;
+	private RequestStorage $storage;
 
+	public function __construct(RequestStorage $storage)
+	{
+		$this->storage = $storage;
+	}
+
+	/**
+	 * @param RequestEvent $event
+	 *
+	 * @return void
+	 */
 	public function onKernelRequest(RequestEvent $event)
 	{
 		if (!$event->isMasterRequest()) {
@@ -49,7 +61,8 @@ class RequestSubscriber extends AbstractController implements EventSubscriberInt
 		if ($this->needAccessToken($routeName) && !$res['success']) {
 			$event->setResponse($this->json($res));
 		}
-
+		$this->storage->set('user_info', $res['token_info']['user']);
+		$this->storage->set('token_info', $res['token_info']['token']);
 	}
 
 	private function hasInConfig($routeName): bool
@@ -57,10 +70,6 @@ class RequestSubscriber extends AbstractController implements EventSubscriberInt
 		return key_exists($routeName, $this->routesConfig['routes']);
 	}
 
-	private function needPermission($routeName): bool
-	{
-		return $this->routesConfig['routes'][$routeName]['permission'] !== null;
-	}
 
 	private function needAccessToken($routeName)
 	{
@@ -89,9 +98,11 @@ class RequestSubscriber extends AbstractController implements EventSubscriberInt
 		if ($this->needPermission !== null && ($accessToken->getMask() & $this->needPermission) != $this->needPermission)
 			return ErrorHelper::authorizationFailed(ErrorHelper::AUTH_FAILED_NOT_PERMISSION);
 
+		$tokenInfo['token'] = $accessToken;
+		$tokenInfo['user'] = $accessToken->getOwner();
 		return [
 			'success' => true,
-			'message' => $this->routesConfig,
+			'token_info' => $tokenInfo,
 		];
 
 	}

@@ -16,6 +16,8 @@ class ErrorHelper
 	const ACCESS_TOKEN_GENERATE_ERROR = 7;
 	const REQUEST_WRONG_PARAMS = 8;
 	const REGISTER_USER_ALREADY_EXIST = 9;
+	const INVALID_REQUEST = 10;
+	const POST_NOT_FOUND = 11;
 
 	public static function notValidRequestContentType(string $needType): array
 	{
@@ -69,6 +71,24 @@ class ErrorHelper
 			'success' => false,
 			'code' => $type,
 			'message' => 'user already exist',
+		];
+	}
+
+	public static function invalidRequest(): array
+	{
+		return [
+			'success' => false,
+			'code' => self::INVALID_REQUEST,
+			'message' => 'invalid request',
+		];
+	}
+
+	public static function postNotFound(): array
+	{
+		return [
+			'success' => false,
+			'code' => self::POST_NOT_FOUND,
+			'message' => 'post not found',
 		];
 	}
 

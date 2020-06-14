@@ -27,7 +27,7 @@ class PostRepository extends ServiceEntityRepository
 
 		$offset = ($page * $limit) - $limit;
 
-		$sql = "SELECT p FROM App\Entity\Post p";
+		$sql = "SELECT p FROM App\Entity\Post p ORDER BY p.id DESC";
 		$query = $this->_em->createQuery($sql)
 			->setFirstResult($offset)
 			->setMaxResults($limit);
@@ -46,22 +46,36 @@ class PostRepository extends ServiceEntityRepository
 			'items' => $res,
 		];
 	}
-	// /**
-	//  * @return Post[] Returns an array of Post objects
-	//  */
-	/*
-	public function findByExampleField($value)
-	{
-		return $this->createQueryBuilder('p')
-			->andWhere('p.exampleField = :val')
-			->setParameter('val', $value)
-			->orderBy('p.id', 'ASC')
-			->setMaxResults(10)
-			->getQuery()
-			->getResult()
-		;
-	}
-	*/
+
+//	public function findByExampleField($param, $value, $page = 1, $limit = 5)
+//	{
+//		if ($page <= 0) $page = 1;
+//		if ($limit < 5) $limit = 5;
+//
+//		$offset = ($page * $limit) - $limit;
+//
+//		$query = $this->createQueryBuilder('p')
+//			->andWhere('p.:param = :val')
+//			->setParameter('val', $value)
+//			->setParameter('param', $param)
+//			->orderBy('p.id', 'ASC')
+//			->setFirstResult($offset)
+//			->setMaxResults($limit);
+//		$paginator = new Paginator($query, $fetchJoinCollection = true);
+//		$res = [];
+//		/** @var Post $item */
+//		foreach ($paginator as $item) {
+//			$res[] = $item->export();
+//		}
+//
+//		return [
+//			'page' => $page,
+//			'offset' => $offset,
+//			'limit' => $limit,
+//			'items' => $res,
+//		];
+//	}
+
 
 	/*
 	public function findOneBySomeField($value): ?Post

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Post;
+use App\ErrorHelper;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,5 +31,25 @@ class PostController extends AbstractController
 
 
 		return $this->json($posts);
+	}
+
+	/**
+	 * @Route("/post/{id}")
+	 *
+	 * @param $id
+	 *
+	 * @return JsonResponse
+	 */
+	public function getPost($id)
+	{
+		if ((int)$id === 0) return $this->json(ErrorHelper::invalidRequest());
+
+		$post = $this->getDoctrine()->getRepository(Post::class)->find($id);
+		if (!$post) return $this->json(ErrorHelper::postNotFound());
+
+
+		$res = $post->export();
+
+		return $this->json($res);
 	}
 }

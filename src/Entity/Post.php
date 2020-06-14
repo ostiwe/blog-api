@@ -56,9 +56,15 @@ class Post
 	 */
 	private $published;
 
+	/**
+	 * @ORM\OneToMany(targetEntity=Comment::class, mappedBy="post")
+	 */
+	private $comments;
+
 	public function __construct()
 	{
 		$this->tags = new ArrayCollection();
+		$this->comments = new ArrayCollection();
 	}
 
 	public function getId(): ?int
@@ -171,14 +177,45 @@ class Post
 			'id' => $this->id,
 			'creator' => [
 				'login' => $this->creator->getLogin(),
-				'mask' => $this->creator->getMask(),
 			],
 			'published' => $this->published,
 			'title' => $this->title,
 			'description' => $this->description,
 			'content' => $this->content,
+			'views' => $this->views,
 			'tags' => $tags,
 		];
+	}
+
+	/**
+	 * @return Collection|Comment[]
+	 */
+	public function getComments(): Collection
+	{
+		return $this->comments;
+	}
+
+	public function addCommet(Comment $comment): self
+	{
+		if (!$this->comments->contains($comment)) {
+			$this->comments[] = $comment;
+			$comment->setPost($this);
+		}
+
+		return $this;
+	}
+
+	public function removeCommet(Comment $comment): self
+	{
+		if ($this->comments->contains($comment)) {
+			$this->comments->removeElement($comment);
+			// set the owning side to null (unless already changed)
+			if ($comment->getPost() === $this) {
+				$comment->setPost(null);
+			}
+		}
+
+		return $this;
 	}
 
 
