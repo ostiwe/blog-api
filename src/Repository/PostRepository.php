@@ -47,6 +47,12 @@ class PostRepository extends ServiceEntityRepository
 		];
 	}
 
+	public function getCount()
+	{
+		$sql = "SELECT COUNT(p) FROM App\Entity\Post p";
+		return $this->_em->createQuery($sql)->execute()[0][1];
+	}
+
 //	public function findByExampleField($param, $value, $page = 1, $limit = 5)
 //	{
 //		if ($page <= 0) $page = 1;

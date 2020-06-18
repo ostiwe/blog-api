@@ -42,6 +42,12 @@ class UserRepository extends ServiceEntityRepository
 		return $res;
 	}
 
+	public function getCount()
+	{
+		$sql = "SELECT COUNT(u) FROM App\Entity\User u";
+		return $this->_em->createQuery($sql)->execute()[0][1];
+	}
+
 	// /**
 	//  * @return User[] Returns an array of User objects
 	//  */

@@ -17,6 +17,15 @@ use Symfony\Component\Routing\Annotation\Route;
 class CommentController extends AbstractController
 {
 
+	private $cacheController = null;
+
+	public function __construct()
+	{
+		if (!$this->cacheController) {
+			$this->cacheController = new CacheController();
+		}
+	}
+
 	/** @Route("/comments/{postID}",methods={"GET"})
 	 * @param $postID
 	 *
@@ -25,12 +34,19 @@ class CommentController extends AbstractController
 	public function index($postID)
 	{
 		if ((int)$postID === 0) return $this->json(ErrorHelper::invalidRequest());
+
+		if ($this->cacheController->inCache("comments.post_$postID")) {
+			$comments = $this->cacheController->getItemFromCache("comments.post_$postID");
+			return $this->json($comments);
+
+		}
 		$post = $this->getDoctrine()->getRepository(Post::class)->find($postID);
 
 		$comments = [];
 		foreach ($post->getComments() as $comment) {
 			$comments[] = $comment->export();
 		}
+		$this->cacheController->setCache("comments.post_$postID", $comments);
 
 		return $this->json($comments);
 	}
@@ -62,6 +78,19 @@ class CommentController extends AbstractController
 		$this->getDoctrine()->getManager()->persist($comment);
 		$this->getDoctrine()->getManager()->flush();
 
+		$this->updateCommentsCache($postID);
 		return $this->json(['success' => true, 'comment_id' => $comment->getId()]);
+	}
+
+
+	private function updateCommentsCache($postID)
+	{
+		$post = $this->getDoctrine()->getRepository(Post::class)->find($postID);
+
+		$comments = [];
+		foreach ($post->getComments() as $comment) {
+			$comments[] = $comment->export();
+		}
+		$this->cacheController->setCache("comments.post_$postID", $comments);
 	}
 }

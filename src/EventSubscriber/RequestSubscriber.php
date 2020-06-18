@@ -61,8 +61,6 @@ class RequestSubscriber extends AbstractController implements EventSubscriberInt
 		if ($this->needAccessToken($routeName) && !$res['success']) {
 			$event->setResponse($this->json($res));
 		}
-		$this->storage->set('user_info', $res['token_info']['user']);
-		$this->storage->set('token_info', $res['token_info']['token']);
 	}
 
 	private function hasInConfig($routeName): bool
@@ -79,7 +77,6 @@ class RequestSubscriber extends AbstractController implements EventSubscriberInt
 
 	public function accessTokenMiddleware()
 	{
-
 		$token = $this->request->headers->get('token');
 
 		if (!$token || $token === '')
@@ -100,9 +97,12 @@ class RequestSubscriber extends AbstractController implements EventSubscriberInt
 
 		$tokenInfo['token'] = $accessToken;
 		$tokenInfo['user'] = $accessToken->getOwner();
+
+		$this->storage->set('user_info', $tokenInfo['user']);
+		$this->storage->set('token_info', $tokenInfo['token']);
+
 		return [
 			'success' => true,
-			'token_info' => $tokenInfo,
 		];
 
 	}
