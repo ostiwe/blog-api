@@ -14,3 +14,7 @@ routes:
     content_type: json
     permission: 16
     token_need: true
+  app_auth_logout:
+    content_type: json
+    permission:
+    token_need: true

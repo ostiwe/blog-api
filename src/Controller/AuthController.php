@@ -3,8 +3,10 @@
 namespace App\Controller;
 
 use App\Entity\AccessToken;
+use App\Entity\Lang;
 use App\Entity\User;
 use App\ErrorHelper;
+use App\Services\RequestStorage;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,7 +15,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class AuthController extends AbstractController
 {
 	/**
-	 * @Route("/auth/info")
+	 * @Route("/auth/info", methods={"POST"})
 	 * @param Request $request
 	 *
 	 * @return JsonResponse
@@ -40,7 +42,7 @@ class AuthController extends AbstractController
 	}
 
 	/**
-	 * @Route("/auth/login")
+	 * @Route("/auth/login", methods={"POST"})
 	 * @param Request $request
 	 *
 	 * @return JsonResponse
@@ -82,7 +84,7 @@ class AuthController extends AbstractController
 	}
 
 	/**
-	 * @Route("/auth/register")
+	 * @Route("/auth/register",methods={"POST"})
 	 * @param Request $request
 	 *
 	 * @return JsonResponse
@@ -113,7 +115,7 @@ class AuthController extends AbstractController
 		if ($existEmailUser)
 			return $this->json(ErrorHelper::registerError(ErrorHelper::REGISTER_USER_ALREADY_EXIST));
 
-
+		$lang = $this->getDoctrine()->getRepository(Lang::class)->find(1);
 		$newUser = (new User())
 			->setMask(User::USER_DEFAULT_MASK)
 			->setPassword(password_hash($body['password'], PASSWORD_DEFAULT))
@@ -121,7 +123,8 @@ class AuthController extends AbstractController
 			->setLastName($body['last_name'])
 			->setFirstName($body['first_name'])
 			->setSex($body['sex'])
-			->setEmail($body['email']);
+			->setEmail($body['email'])
+			->setLang($lang);
 
 		$this->getDoctrine()->getManager()->persist($newUser);
 
@@ -132,5 +135,23 @@ class AuthController extends AbstractController
 		]);
 	}
 
+	/**
+	 * @Route("/auth/logout",methods={"POST"})
+	 * @param Request        $request
+	 * @param RequestStorage $storage
+	 *
+	 * @return JsonResponse
+	 */
+	public function logOut(Request $request, RequestStorage $storage)
+	{
+		$token = $this->getDoctrine()
+			->getRepository(AccessToken::class)->find($storage->get('token_info')->getId());
+
+		$this->getDoctrine()->getManager()->remove($token);
+		$this->getDoctrine()->getManager()->flush();
+
+
+		return $this->json(['success' => true,]);
+	}
 
 }

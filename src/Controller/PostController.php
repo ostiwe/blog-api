@@ -68,7 +68,7 @@ class PostController extends AbstractController
 		return $this->json($res);
 	}
 
-	/** @Route("/posts/count") */
+	/** @Route("/posts/count",methods={"GET"}) */
 	public function count()
 	{
 		$posts = $this->getDoctrine()->getRepository(Post::class)->getCount();

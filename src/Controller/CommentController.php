@@ -51,7 +51,8 @@ class CommentController extends AbstractController
 		return $this->json($comments);
 	}
 
-	/** @Route("/comments/{postID}",methods={"PUT"})
+	/**
+	 * @Route("/comments/{postID}",methods={"PUT","POST"})
 	 * @param Request        $request
 	 * @param                $postID
 	 *
@@ -74,6 +75,8 @@ class CommentController extends AbstractController
 			->setCreator($user)
 			->setPost($post)
 			->setText($body['text']);
+
+		if (($user->getMask() & User::COMMENTS_NO_NEED_MODERATE) == User::COMMENTS_NO_NEED_MODERATE) $comment->setModerated(true);
 
 		$this->getDoctrine()->getManager()->persist($comment);
 		$this->getDoctrine()->getManager()->flush();

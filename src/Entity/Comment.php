@@ -139,7 +139,7 @@ class Comment
 			'moderated' => $this->moderated,
 			'deleted' => $this->deleted,
 			'creator' => $creatorInfo,
-			'text' => $this->text,
+			'text' => $this->deleted ? '### hidden' : $this->text,
 		];
 	}
 }
