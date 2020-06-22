@@ -18,3 +18,7 @@ routes:
     content_type: json
     permission:
     token_need: true
+  upload_file:
+    content_type:
+    permission:
+    token_need: true

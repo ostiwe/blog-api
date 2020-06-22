@@ -26,7 +26,8 @@ class CommentController extends AbstractController
 		}
 	}
 
-	/** @Route("/comments/{postID}",methods={"GET"})
+	/**
+	 * @Route("/comments/{postID}",methods={"GET"})
 	 * @param $postID
 	 *
 	 * @return JsonResponse
@@ -42,6 +43,7 @@ class CommentController extends AbstractController
 		}
 		$post = $this->getDoctrine()->getRepository(Post::class)->find($postID);
 
+		if (!$post) return $this->json(ErrorHelper::postNotFound());
 		$comments = [];
 		foreach ($post->getComments() as $comment) {
 			$comments[] = $comment->export();
@@ -52,7 +54,7 @@ class CommentController extends AbstractController
 	}
 
 	/**
-	 * @Route("/comments/{postID}",methods={"PUT","POST"})
+	 * @Route("/comments/{postID}",methods={"POST"})
 	 * @param Request        $request
 	 * @param                $postID
 	 *

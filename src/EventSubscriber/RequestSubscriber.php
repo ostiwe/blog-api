@@ -54,11 +54,11 @@ class RequestSubscriber extends AbstractController implements EventSubscriberInt
 		}
 
 		if ($this->needAccessToken($routeName) && is_null($res)) {
-			$event->setResponse($this->json(['success' => false, 'message' => 'server error'], 500));
+			$event->setResponse($this->json(['error' => true, 'message' => 'server error'], 500));
 			return;
 		}
 
-		if ($this->needAccessToken($routeName) && !$res['success']) {
+		if ($this->needAccessToken($routeName) && $res['error']) {
 			$event->setResponse($this->json($res));
 		}
 	}
@@ -102,7 +102,7 @@ class RequestSubscriber extends AbstractController implements EventSubscriberInt
 		$this->storage->set('token_info', $tokenInfo['token']);
 
 		return [
-			'success' => true,
+			'error' => false,
 		];
 
 	}

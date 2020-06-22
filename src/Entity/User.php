@@ -28,6 +28,15 @@ class User
 
 	const USER_DEFAULT_MASK = self::CAN_READ;
 
+	const FULL_ADMIN =
+		self::CAN_READ |
+		self::CAN_CREATE_POST |
+		self::CAN_UPLOAD_FILES |
+		self::CAN_CREATE_COMMENT |
+		self::CAN_DELETE_COMMENT |
+		self::CAN_WRITE_MESSAGES |
+		self::COMMENTS_NO_NEED_MODERATE;
+
 	/**
 	 * @ORM\Id()
 	 * @ORM\GeneratedValue()
@@ -91,11 +100,22 @@ class User
 	 */
 	private $lang;
 
+	/**
+	 * @ORM\Column(type="string", length=255, nullable=true)
+	 */
+	private $avatar = "193.jpg";
+
+	/**
+	 * @ORM\OneToMany(targetEntity=File::class, mappedBy="owner")
+	 */
+	private $files;
+
 	public function __construct()
 	{
 		$this->posts = new ArrayCollection();
 		$this->accessTokens = new ArrayCollection();
 		$this->comments = new ArrayCollection();
+		$this->files = new ArrayCollection();
 	}
 
 	public function getId(): ?int
@@ -254,6 +274,7 @@ class User
 		return [
 			'id' => $this->id,
 			'login' => $this->login,
+			'avatar' => $this->avatar,
 			'first_name' => $this->firstName,
 			'last_name' => $this->lastName,
 			'mask' => $this->mask,
@@ -301,6 +322,49 @@ class User
 	public function setLang(?Lang $lang): self
 	{
 		$this->lang = $lang;
+
+		return $this;
+	}
+
+	public function getAvatar(): ?string
+	{
+		return $this->avatar;
+	}
+
+	public function setAvatar(?string $avatar): self
+	{
+		$this->avatar = $avatar;
+
+		return $this;
+	}
+
+	/**
+	 * @return Collection|File[]
+	 */
+	public function getFiles(): Collection
+	{
+		return $this->files;
+	}
+
+	public function addFile(File $file): self
+	{
+		if (!$this->files->contains($file)) {
+			$this->files[] = $file;
+			$file->setOwner($this);
+		}
+
+		return $this;
+	}
+
+	public function removeFile(File $file): self
+	{
+		if ($this->files->contains($file)) {
+			$this->files->removeElement($file);
+			// set the owning side to null (unless already changed)
+			if ($file->getOwner() === $this) {
+				$file->setOwner(null);
+			}
+		}
 
 		return $this;
 	}

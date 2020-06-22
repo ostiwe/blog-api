@@ -18,11 +18,13 @@ class ErrorHelper
 	const REGISTER_USER_ALREADY_EXIST = 9;
 	const INVALID_REQUEST = 10;
 	const POST_NOT_FOUND = 11;
+	const FILE_TYPE_NOT_ALLOWED = 12;
+	const UPLOAD_ERROR = 13;
 
 	public static function notValidRequestContentType(string $needType): array
 	{
 		return [
-			'success' => false,
+			'error' => true,
 			'code' => self::NOT_VALID_REQUEST_CONTENT_TYPE,
 			'message' => "request content-type must be a $needType",
 		];
@@ -31,7 +33,7 @@ class ErrorHelper
 	public static function authorizationFailed(int $authorizationType): array
 	{
 		return [
-			'success' => false,
+			'error' => true,
 			'code' => $authorizationType,
 			'message' => 'authorization failed',
 		];
@@ -40,7 +42,7 @@ class ErrorHelper
 	public static function userNotFound(): array
 	{
 		return [
-			'success' => false,
+			'error' => true,
 			'code' => self::USER_NOT_FOUND,
 			'message' => 'user not found',
 		];
@@ -49,7 +51,7 @@ class ErrorHelper
 	public static function accessTokenGenerateError(): array
 	{
 		return [
-			'success' => false,
+			'error' => true,
 			'code' => self::ACCESS_TOKEN_GENERATE_ERROR,
 			'message' => 'unable to create access token, try again later',
 		];
@@ -58,7 +60,7 @@ class ErrorHelper
 	public static function requestWrongParams(array $messages): array
 	{
 		return [
-			'success' => false,
+			'error' => true,
 			'code' => self::REQUEST_WRONG_PARAMS,
 			'message' => 'one or more parameters passed incorrectly',
 			'data' => $messages,
@@ -68,7 +70,7 @@ class ErrorHelper
 	public static function registerError($type): array
 	{
 		return [
-			'success' => false,
+			'error' => true,
 			'code' => $type,
 			'message' => 'user already exist',
 		];
@@ -77,7 +79,7 @@ class ErrorHelper
 	public static function invalidRequest(): array
 	{
 		return [
-			'success' => false,
+			'error' => true,
 			'code' => self::INVALID_REQUEST,
 			'message' => 'invalid request',
 		];
@@ -86,10 +88,27 @@ class ErrorHelper
 	public static function postNotFound(): array
 	{
 		return [
-			'success' => false,
+			'error' => true,
 			'code' => self::POST_NOT_FOUND,
 			'message' => 'post not found',
 		];
 	}
 
+	public static function noAllowedFileType()
+	{
+		return [
+			'error' => true,
+			'code' => self::FILE_TYPE_NOT_ALLOWED,
+			'message' => 'this file type is not allowed',
+		];
+	}
+
+	public static function uploadError()
+	{
+		return [
+			'error' => true,
+			'code' => self::UPLOAD_ERROR,
+			'message' => 'file cannot be uploaded now',
+		];
+	}
 }

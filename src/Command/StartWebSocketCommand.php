@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\CliCommands;
+namespace App\Command;
 
 
 use App\WebSocket\MainWebSocket;
@@ -12,7 +12,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class StartWebSocketCliCommand extends Command
+class StartWebSocketCommand extends Command
 {
 	/**
 	 * Configure a new Command Line
@@ -35,6 +35,7 @@ class StartWebSocketCliCommand extends Command
 
 		$server->run();
 
+		return 0;
 	}
 
 }

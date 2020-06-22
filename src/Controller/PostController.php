@@ -37,7 +37,7 @@ class PostController extends AbstractController
 			$posts = $this->cacheController->getItemFromCache("posts.page_{$params['page']}");
 		} else {
 			$posts = $this->getDoctrine()->getRepository(Post::class)->paginate($params['page']);
-			if (count($posts) !== 0)
+			if (count($posts['items']) !== 0)
 				$this->cacheController->setCache("posts.page_{$params['page']}", $posts);
 		}
 

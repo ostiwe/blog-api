@@ -17,10 +17,11 @@ class CacheController
 
 	public function __construct()
 	{
-		if ($_ENV['USE_REDIS']) {
+		if ($_ENV['USE_REDIS'] === 'true') {
 			$host = $_ENV['REDIS_HOST'];
 			$port = $_ENV['REDIS_PORT'];
-			$redisConnection = RedisAdapter::createConnection("redis://$host:$port", [
+			$dbIndex = $_ENV['REDIS_DB_INDEX'];
+			$redisConnection = RedisAdapter::createConnection("redis://$host:$port/$dbIndex", [
 				'compression' => true,
 				'lazy' => false,
 				'persistent' => 0,
@@ -33,7 +34,8 @@ class CacheController
 			$cache = new RedisAdapter($redisConnection, '', 0);
 			$this->cache = $cache;
 		} else {
-			$this->cache = new FilesystemAdapter();
+			$this->cache = new FilesystemAdapter('', 0,
+				dirname(__DIR__, 2) . '/var/cache/dbresp');
 		}
 	}
 
@@ -72,5 +74,14 @@ class CacheController
 		} catch (InvalidArgumentException $e) {
 			return false;
 		}
+	}
+
+	public function flushCache()
+	{
+
+		if ($_ENV['USE_REDIS'] === 'true') {
+			return $this->cache->clear('*');
+		}
+		return $this->cache->clear();
 	}
 }
