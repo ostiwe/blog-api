@@ -3,7 +3,12 @@
 namespace App\Controller;
 
 use App\Entity\Post;
+use App\Entity\Tag;
+use App\Entity\User;
 use App\ErrorHelper;
+use App\ParamsChecker;
+use App\Services\RequestStorage;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -45,6 +50,82 @@ class PostController extends AbstractController
 	}
 
 	/**
+	 * @Route("/posts",methods={"POST"})
+	 * @param Request        $request
+	 * @param RequestStorage $requestStorage
+	 *
+	 * @return JsonResponse
+	 */
+	public function createPost(Request $request, RequestStorage $requestStorage)
+	{
+		$body = json_decode($request->getContent(), true);
+		$publishNow = false;
+		$errors = ParamsChecker::check([
+			'title',
+			'content',
+			'published',
+			'tags',
+		], $body);
+
+		if (count($errors) > 0) return $this->json(ErrorHelper::requestWrongParams($errors));
+
+		if (is_array($body['tags']) && count($body['tags']) === 0) {
+			$errors['tags'][] = 'need one or more tags';
+			return $this->json(ErrorHelper::requestWrongParams($errors));
+		} else if (!is_array($body['tags'])) {
+			$errors['tags'][] = 'tags params mast be a array';
+			return $this->json(ErrorHelper::requestWrongParams($errors));
+		}
+
+		if (key_exists('publish_now', $body)) $publishNow = boolval((int)$body['publish_now']);
+
+		if (!$publishNow && !$this->isValidTimeStamp($body['published'])) return $this->json(ErrorHelper::requestWrongParams([
+			'published' => ['published must be a unix time and the number must be greater than ' . time()]]));
+
+		if ($this->cacheController->inCache('tags.allid')) {
+			$tagsIdList = $this->cacheController->getItemFromCache('tags.allid');
+		} else {
+			$tagController = new TagController();
+			$tagController->setContainer($this->container);
+			$tagController->getTagsIdList();
+			$tagsIdList = $this->cacheController->getItemFromCache('tags.allid');
+		}
+		$tagsError = [];
+		foreach ($body['tags'] as $tag) {
+			if (!in_array((int)$tag, $tagsIdList['data'])) $tagsError[] = "tag with id '$tag' not found";
+		}
+		if (count($tagsError) > 0) return $this->json(ErrorHelper::requestWrongParams($tagsError));
+		unset($tag);
+
+
+		/** @var User $author */
+		$author = $requestStorage->get('user_info');
+
+		$newPost = (new Post())
+			->setCreator($author)
+			->setTitle($body['title'])
+			->setContent($body['content'])
+			->setDescription($body['description'] ?? null)
+			->setPublished(!$publishNow ? (int)$body['published'] : time())
+			->setViews(0);
+
+
+		foreach ($body['tags'] as $tag) {
+			$tagObject = $this->getDoctrine()->getRepository(Tag::class)->find($tag);
+			$newPost->addTag($tagObject);
+		}
+
+		try {
+			$this->getDoctrine()->getManager()->persist($newPost);
+			$this->getDoctrine()->getManager()->flush();
+		} catch (Exception $exception) {
+			return $this->json(['error' => true, 'message' => 'Unable to create a post at this time, try again later']);
+		}
+		$this->cacheController->flushCache();
+		return $this->json(['success' => true, 'post_id' => $newPost->getId()]);
+	}
+
+	/**
 	 * @Route("/post/{id}",methods={"GET"})
 	 *
 	 * @param $id
@@ -60,7 +141,7 @@ class PostController extends AbstractController
 		}
 
 		$post = $this->getDoctrine()->getRepository(Post::class)->find($id);
-		if (!$post) return $this->json(ErrorHelper::postNotFound());
+		if (!$post || $post->getPublished() > time()) return $this->json(ErrorHelper::postNotFound());
 
 		$res = $post->export();
 		$this->cacheController->setCache("posts.post_$id", $res);
@@ -73,6 +154,13 @@ class PostController extends AbstractController
 	{
 		$posts = $this->getDoctrine()->getRepository(Post::class)->getCount();
 		return $this->json(['success' => true, 'count' => $posts]);
+	}
+
+	private function isValidTimeStamp($timestamp)
+	{
+		return ((string)(int)$timestamp === $timestamp)
+			&& ($timestamp <= PHP_INT_MAX)
+			&& ($timestamp >= time());
 	}
 
 

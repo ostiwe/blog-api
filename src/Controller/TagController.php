@@ -28,12 +28,30 @@ class TagController extends AbstractController
 			return $this->json($this->cacheController->getItemFromCache('tags.all'));
 
 		$tagsList = $this->getDoctrine()->getRepository(Tag::class)->findAll();
-		$tags['items'] = array_map(function ($tag) { return $tag->export(); }, $tagsList);
+		$tags['items'] = array_map(function ($tag) {
+			return $tag->export();
+		}, $tagsList);
 		$tags['count'] = count($tags['items']);
 		asort($tags);
 
 		$this->cacheController->setCache('tags.all', $tags);
 		return $this->json($tags);
+	}
+
+	/** @Route("/tags/id-list", methods={"GET"}) */
+	public function getTagsIdList()
+	{
+		if ($this->cacheController->inCache('tags.allid')) {
+			return $this->json($this->cacheController->getItemFromCache('tags.allid'));
+		}
+		$tagsList = $this->getDoctrine()->getRepository(Tag::class)->findAll();
+
+		$tagsListId = array_map(function (Tag $tag) {
+			return $tag->getId();
+		}, $tagsList);
+		$this->cacheController->setCache('tags.allid', ['success' => true, 'data' => $tagsListId]);
+
+		return $this->json(['success' => true, 'data' => $tagsListId]);
 	}
 
 	/** @Route("/tag/{tagId}",methods={"GET"})

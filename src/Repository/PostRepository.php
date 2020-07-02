@@ -26,8 +26,8 @@ class PostRepository extends ServiceEntityRepository
 		if ($limit < 5) $limit = 5;
 
 		$offset = ($page * $limit) - $limit;
-
-		$sql = "SELECT p FROM App\Entity\Post p ORDER BY p.id DESC";
+		$time = time();
+		$sql = "SELECT p FROM App\Entity\Post p WHERE p.published <= $time ORDER BY p.id DESC";
 		$query = $this->_em->createQuery($sql)
 			->setFirstResult($offset)
 			->setMaxResults($limit);

@@ -6,6 +6,7 @@ use App\Entity\AccessToken;
 use App\Entity\Lang;
 use App\Entity\User;
 use App\ErrorHelper;
+use App\ParamsChecker;
 use App\Services\RequestStorage;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -50,10 +51,8 @@ class AuthController extends AbstractController
 	public function login(Request $request)
 	{
 		$body = json_decode($request->getContent(), true);
-		$errors = [];
-		if (!key_exists('login', $body) || empty($body['login'])) $errors[] = 'field "login" can’t be empty';
-		if (!key_exists('password', $body) || empty($body['password'])) $errors[] = 'field "password" can’t be empty';
 
+		$errors = ParamsChecker::check(['login', 'password'], $body);
 		if (count($errors) > 0) return $this->json(ErrorHelper::requestWrongParams($errors));
 
 		$em = $this->getDoctrine()->getManager();
@@ -92,14 +91,11 @@ class AuthController extends AbstractController
 	public function register(Request $request)
 	{
 		$body = json_decode($request->getContent(), true);
-		$errors = [];
-		if (!key_exists('login', $body) || empty($body['login'])) $errors[] = 'field "login" can’t be empty';
-		if (!key_exists('password', $body) || empty($body['password'])) $errors[] = 'field "password" can’t be empty';
-		if (!key_exists('email', $body) || empty($body['email'])) $errors[] = 'field "email" can’t be empty';
-		if (!key_exists('age', $body) || empty($body['age'])) $errors[] = 'field "age" can’t be empty';
-		if (!key_exists('first_name', $body) || empty($body['first_name'])) $errors[] = 'field "first_name" can’t be empty';
-		if (!key_exists('last_name', $body) || empty($body['last_name'])) $errors[] = 'field "last_name" can’t be empty';
-		if (!key_exists('sex', $body) || empty($body['sex'])) $errors[] = 'field "sex" can’t be empty';
+		$errors = ParamsChecker::check([
+			'login', 'password', 'email', 'age',
+			'first_name', 'last_name', 'sex',
+		], $body);
+		if (count($errors) > 0) return $this->json(ErrorHelper::requestWrongParams($errors));
 
 		$userRepo = $this->getDoctrine()->getRepository(User::class);
 
@@ -137,12 +133,11 @@ class AuthController extends AbstractController
 
 	/**
 	 * @Route("/auth/logout",methods={"POST"})
-	 * @param Request        $request
 	 * @param RequestStorage $storage
 	 *
 	 * @return JsonResponse
 	 */
-	public function logOut(Request $request, RequestStorage $storage)
+	public function logOut(RequestStorage $storage)
 	{
 		$token = $this->getDoctrine()
 			->getRepository(AccessToken::class)->find($storage->get('token_info')->getId());

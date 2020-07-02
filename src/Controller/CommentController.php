@@ -8,6 +8,7 @@ use App\Entity\Comment;
 use App\Entity\Post;
 use App\Entity\User;
 use App\ErrorHelper;
+use App\ParamsChecker;
 use App\Services\RequestStorage;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -66,7 +67,9 @@ class CommentController extends AbstractController
 	{
 		if ((int)$postID === 0) return $this->json(ErrorHelper::invalidRequest());
 		$body = json_decode($request->getContent(), true);
-		if (!key_exists('text', $body) || empty(trim($body['text']))) return $this->json(ErrorHelper::invalidRequest());
+
+		$errors = ParamsChecker::check(['text'], $body);
+		if (count($errors) > 0) return $this->json(ErrorHelper::invalidRequest());
 
 		$post = $this->getDoctrine()->getRepository(Post::class)->find($postID);
 		if (!$post) return $this->json(ErrorHelper::postNotFound());

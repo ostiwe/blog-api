@@ -10,15 +10,23 @@ routes:
     content_type: json
     permission:
     token_need: false
+
   app_comment_add:
     content_type: json
     permission: 16
     token_need: true
+
   app_auth_logout:
     content_type: json
     permission:
     token_need: true
+
   upload_file:
     content_type:
     permission:
+    token_need: true
+
+  app_post_createpost:
+    content_type: json
+    permission: 4
     token_need: true

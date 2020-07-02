@@ -66,10 +66,12 @@ class CacheController
 
 	public function setCache(string $key, $value): bool
 	{
+		$expiresAfter = (int)$_ENV['REDIS_ITEM_EXPIRES_AFTER'];
 		try {
 			/** @var CacheItem $newCacheItem */
 			$newCacheItem = $this->cache->getItem($key);
 			$newCacheItem->set($value);
+			$newCacheItem->expiresAfter($expiresAfter);
 			return $this->cache->save($newCacheItem);
 		} catch (InvalidArgumentException $e) {
 			return false;
