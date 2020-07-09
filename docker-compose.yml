@@ -1,57 +1,55 @@
 version: "3"
 
 services:
-  web:
-    container_name: app_web
-    image: nginx
+  nginx:
+    image: nginx:1.19.0-alpine
+    container_name: nginx-1.19.0-alpine
     volumes:
       - ./docker/nginx/templates:/etc/nginx/templates
       - .:/usr/share/nginx/html
     environment:
       - NGINX_PORT=80
-      - NGINX_HOSTNAME=api.symf.loc
+      - NGINX_HOSTNAME=localhost
       - FPM_PORT=9000
-    links:
-      - php-fpm
     depends_on:
       - php-fpm
     ports:
       - 80:80
 
   php-fpm:
-    container_name: web_phpfpm74
     build: .
+    container_name: php-fpm-7.4
     volumes:
       - .:/usr/share/nginx/html
     working_dir: /usr/share/nginx/html
     depends_on:
       - composer
-      - db
+      - mysql
       - redis
     ports:
       - 9000:9000
 
   composer:
-    container_name: web_composer
-    image: composer
+    image: composer:1.10
+    container_name: composer-1.10
     volumes:
       - .:/usr/share/nginx/html
     working_dir: /usr/share/nginx/html
     command: "composer i"
 
-  db:
-    container_name: app_db
-    image: mysql
+  mysql:
+    image: mysql:8.0.20
+    container_name: mysql-8.0.20
+    ports:
+      - 3306:3306
     environment:
       - MYSQL_DATABASE=symfony
       - MYSQL_USER=symfony
       - MYSQL_PASSWORD=symfony
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
-    ports:
-      - 3306:3306
 
   redis:
-    container_name: app_redis
-    image: redis
+    image: redis:6.0.5
+    container_name: redis-6.0.5
     ports:
       - 6379:6379
