@@ -27,6 +27,13 @@ class CommentController extends AbstractController
 		}
 	}
 
+	/** @Route("/comments/count",methods={"GET"}) */
+	public function count()
+	{
+		$commentsCount = $this->getDoctrine()->getRepository(Comment::class)->getCount();
+		return $this->json(['success' => true, 'count' => $commentsCount]);
+	}
+
 	/**
 	 * @Route("/comments/{postID}",methods={"GET"})
 	 * @param $postID
@@ -53,6 +60,7 @@ class CommentController extends AbstractController
 
 		return $this->json($comments);
 	}
+
 
 	/**
 	 * @Route("/comments/{postID}",methods={"POST"})
@@ -90,7 +98,6 @@ class CommentController extends AbstractController
 		return $this->json(['success' => true, 'comment_id' => $comment->getId()]);
 	}
 
-
 	private function updateCommentsCache($postID)
 	{
 		$post = $this->getDoctrine()->getRepository(Post::class)->find($postID);
@@ -101,4 +108,5 @@ class CommentController extends AbstractController
 		}
 		$this->cacheController->setCache("comments.post_$postID", $comments);
 	}
+
 }

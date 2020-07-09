@@ -44,7 +44,7 @@ class RequestSubscriber extends AbstractController implements EventSubscriberInt
 		if (!$this->hasInConfig($routeName)) return;
 		$needRequestContentType = $this->routesConfig['routes'][$routeName]['content_type'];
 
-		if ($needRequestContentType !== $requestContentType) {
+		if ($needRequestContentType !== null && ($needRequestContentType !== $requestContentType)) {
 			return $event->setResponse($this->json(ErrorHelper::notValidRequestContentType($needRequestContentType)));
 		}
 

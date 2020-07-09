@@ -21,7 +21,11 @@ class User
 	const CAN_DELETE_COMMENT = 1 << 5;
 	const CAN_WRITE_MESSAGES = 1 << 6;
 
+
 	const COMMENTS_NO_NEED_MODERATE = 1 << 7;
+
+	const CAN_DELETE_POSTS = 1 << 8;
+	const CAN_EDIT_POSTS = 1 << 9;
 
 	const USER_BLOCKED = 1 << 0;
 
@@ -35,7 +39,9 @@ class User
 		self::CAN_CREATE_COMMENT |
 		self::CAN_DELETE_COMMENT |
 		self::CAN_WRITE_MESSAGES |
-		self::COMMENTS_NO_NEED_MODERATE;
+		self::COMMENTS_NO_NEED_MODERATE |
+		self::CAN_DELETE_POSTS |
+		self::CAN_EDIT_POSTS;
 
 	/**
 	 * @ORM\Id()
