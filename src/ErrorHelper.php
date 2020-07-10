@@ -20,6 +20,7 @@ class ErrorHelper
 	const POST_NOT_FOUND = 11;
 	const FILE_TYPE_NOT_ALLOWED = 12;
 	const UPLOAD_ERROR = 13;
+	const POST_ALREADY_CREATED = 14;
 
 	public static function notValidRequestContentType(string $needType): array
 	{
@@ -32,10 +33,30 @@ class ErrorHelper
 
 	public static function authorizationFailed(int $authorizationType): array
 	{
+		switch ($authorizationType) {
+			case self::AUTH_FAILED_TOKEN:
+				$desc = 'for this action need token';
+				break;
+			case self::AUTH_FAILED_PASSWORD:
+				$desc = 'password need';
+				break;
+			case self::AUTH_FAILED_TOKEN_NOT_FOUND:
+				$desc = 'token not found';
+				break;
+			case self::AUTH_FAILED_NOT_PERMISSION:
+				$desc = 'you do not have permissions to this action';
+				break;
+			default:
+				$desc = '';
+				break;
+
+		}
+
 		return [
 			'error' => true,
 			'code' => $authorizationType,
 			'message' => 'authorization failed',
+			'description' => $desc,
 		];
 	}
 
@@ -94,7 +115,7 @@ class ErrorHelper
 		];
 	}
 
-	public static function noAllowedFileType()
+	public static function noAllowedFileType(): array
 	{
 		return [
 			'error' => true,
@@ -103,12 +124,21 @@ class ErrorHelper
 		];
 	}
 
-	public static function uploadError()
+	public static function uploadError(): array
 	{
 		return [
 			'error' => true,
 			'code' => self::UPLOAD_ERROR,
 			'message' => 'file cannot be uploaded now',
+		];
+	}
+
+	public static function postAllreadyCreated(): array
+	{
+		return [
+			'error' => true,
+			'code' => self::POST_ALREADY_CREATED,
+			'message' => 'post with this name already exists',
 		];
 	}
 }

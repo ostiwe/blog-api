@@ -37,14 +37,11 @@ class PostController extends AbstractController
 
 		if (!$params) $params = [];
 		if (!key_exists('page', $params)) $params['page'] = 1;
+		if (!key_exists('show_all', $params)) $params['show_all'] = false;
 
-		if ($this->cacheController->inCache("posts.page_{$params['page']}")) {
-			$posts = $this->cacheController->getItemFromCache("posts.page_{$params['page']}");
-		} else {
-			$posts = $this->getDoctrine()->getRepository(Post::class)->paginate($params['page']);
-			if (count($posts['items']) !== 0)
-				$this->cacheController->setCache("posts.page_{$params['page']}", $posts);
-		}
+		$showAll = filter_var($params['show_all'], FILTER_VALIDATE_BOOLEAN);
+
+		$posts = $this->getDoctrine()->getRepository(Post::class)->paginate($params['page'], 5, $showAll);
 
 		return $this->json($posts);
 	}
@@ -80,7 +77,13 @@ class PostController extends AbstractController
 		if (key_exists('publish_now', $body)) $publishNow = boolval((int)$body['publish_now']);
 
 		if (!$publishNow && !$this->isValidTimeStamp($body['published'])) return $this->json(ErrorHelper::requestWrongParams([
-			'published' => ['published must be a unix time and the number must be greater than ' . time()]]));
+			'published' => ['published must be a unix time and the number must be greater than ' . time() . ', you set ' . $body['published']]]));
+
+		$findPost = $this->getDoctrine()->getRepository(Post::class)->findBy([
+			'title' => $body['title'],
+		]);
+
+		if ($findPost) return $this->json(ErrorHelper::postAllreadyCreated());
 
 		if ($this->cacheController->inCache('tags.allid')) {
 			$tagsIdList = $this->cacheController->getItemFromCache('tags.allid');
@@ -156,11 +159,34 @@ class PostController extends AbstractController
 		return $this->json(['success' => true, 'count' => $posts]);
 	}
 
+	/**
+	 * @Route("/posts/{postId}",methods={"DELETE"})
+	 * @param $postId
+	 *
+	 * @return JsonResponse
+	 */
+	public function delete($postId)
+	{
+		if ((int)$postId <= 0) return $this->json(ErrorHelper::invalidRequest());
+
+		$post = $this->getDoctrine()->getRepository(Post::class)->find($postId);
+
+		if (!$post) return $this->json(ErrorHelper::postNotFound());
+
+		try {
+			$this->getDoctrine()->getManager()->remove($post);
+			$this->getDoctrine()->getManager()->flush();
+
+		} catch (Exception $e) {
+			return $this->json(['error' => true, 'message' => 'try again later', '_code' => $e->getCode()]);
+		}
+
+		return $this->json(['success' => true, 'message' => 'post deleted']);
+	}
+
 	private function isValidTimeStamp($timestamp)
 	{
-		return ((string)(int)$timestamp === $timestamp)
-			&& ($timestamp <= PHP_INT_MAX)
-			&& ($timestamp >= time());
+		return ((int)$timestamp <= PHP_INT_MAX) && ((int)$timestamp >= time());
 	}
 
 

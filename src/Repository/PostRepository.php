@@ -20,14 +20,17 @@ class PostRepository extends ServiceEntityRepository
 		parent::__construct($registry, Post::class);
 	}
 
-	public function paginate(int $page = 1, int $limit = 5)
+	public function paginate(int $page = 1, int $limit = 5, bool $allPost = false)
 	{
 		if ($page <= 0) $page = 1;
 		if ($limit < 5) $limit = 5;
 
 		$offset = ($page * $limit) - $limit;
 		$time = time();
-		$sql = "SELECT p FROM App\Entity\Post p WHERE p.published <= $time ORDER BY p.id DESC";
+		if ($allPost) {
+			$sql = "SELECT p FROM App\Entity\Post p ORDER BY p.id DESC";
+		} else $sql = "SELECT p FROM App\Entity\Post p WHERE p.published <= $time ORDER BY p.id DESC";
+
 		$query = $this->_em->createQuery($sql)
 			->setFirstResult($offset)
 			->setMaxResults($limit);
@@ -49,7 +52,8 @@ class PostRepository extends ServiceEntityRepository
 
 	public function getCount()
 	{
-		$sql = "SELECT COUNT(p) FROM App\Entity\Post p";
+		$time = time();
+		$sql = "SELECT COUNT(p) FROM App\Entity\Post p  WHERE p.published <= $time";
 		return $this->_em->createQuery($sql)->execute()[0][1];
 	}
 
