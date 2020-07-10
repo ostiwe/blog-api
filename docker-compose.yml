@@ -7,27 +7,26 @@ services:
     volumes:
       - ./docker/nginx/templates:/etc/nginx/templates
       - .:/usr/share/nginx/html
-    environment:
-      - NGINX_PORT=80
-      - NGINX_HOSTNAME=api.symf.loc
-      - FPM_PORT=9000
     depends_on:
       - php-fpm
     ports:
       - 80:80
+    environment:
+      - NGINX_PORT=80
+      - NGINX_HOSTNAME=api.symf.loc
+      - FPM_PORT=9000
 
   php-fpm:
-    build: .
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
     container_name: php-fpm-7.4
     volumes:
       - .:/usr/share/nginx/html
-    working_dir: /usr/share/nginx/html
     depends_on:
       - composer
       - mysql
       - redis
-    ports:
-      - 9000:9000
 
   composer:
     image: composer:1.10
