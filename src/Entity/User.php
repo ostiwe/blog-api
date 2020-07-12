@@ -27,6 +27,10 @@ class User
 	const CAN_DELETE_POSTS = 1 << 8;
 	const CAN_EDIT_POSTS = 1 << 9;
 
+	const CAN_CREATE_TAGS = 1 << 10;
+	const CAN_GET_FULL_USER_INFO = 1 << 11;
+	const CAN_MODERATE_COMMENTS = 1 << 12;
+
 	const USER_BLOCKED = 1 << 0;
 
 
@@ -41,7 +45,10 @@ class User
 		self::CAN_WRITE_MESSAGES |
 		self::COMMENTS_NO_NEED_MODERATE |
 		self::CAN_DELETE_POSTS |
-		self::CAN_EDIT_POSTS;
+		self::CAN_EDIT_POSTS |
+		self::CAN_CREATE_TAGS |
+		self::CAN_GET_FULL_USER_INFO |
+		self::CAN_MODERATE_COMMENTS;
 
 	/**
 	 * @ORM\Id()
@@ -286,6 +293,8 @@ class User
 			'mask' => $this->mask,
 			'email' => $this->email,
 			'locale' => $this->getLang()->getCode(),
+			'posts' => $this->posts->count(),
+			'comments' => $this->comments->count(),
 		];
 	}
 

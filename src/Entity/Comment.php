@@ -132,6 +132,7 @@ class Comment
 		$creatorInfo = [
 			'id' => $creator->getId(),
 			'login' => $creator->getLogin(),
+			'avatar' => $creator->getAvatar(),
 		];
 		return [
 			'id' => $this->id,

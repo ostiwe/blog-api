@@ -3,6 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Tag;
+use App\ErrorHelper;
+use App\ParamsChecker;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -68,14 +71,74 @@ class TagController extends AbstractController
 
 		if ($limit > 20) $limit = 20;
 
-		if ($this->cacheController->inCache("tags.posts_by_tag_{$page}_{$limit}"))
-			return $this->json($this->cacheController->getItemFromCache("tags.posts_by_tag_{$page}_{$limit}"));
 
 		$paginateTaggedPosts = $this->getDoctrine()
 			->getRepository(Tag::class)->paginatePosts($tagId, $page, $limit);
 
-		$this->cacheController->setCache("tags.posts_by_tag_{$page}_{$limit}", $paginateTaggedPosts);
 
 		return $this->json($paginateTaggedPosts);
+	}
+
+	/** @Route("/tags/stats", methods={"GET"}) */
+	public function getStats()
+	{
+		$allTags = $this->getDoctrine()->getRepository(Tag::class)->findAll();
+
+		$allTagsStats = array_map(function (Tag $tag) {
+			$tagInfo = $tag->export();
+			$tagInfo['posts'] = count($tag->getRealizedPosts());
+			return $tagInfo;
+		}, $allTags);
+
+		return $this->json(['success' => true, 'data' => $allTagsStats]);
+	}
+
+	/** @Route("/tags", methods={"POST"})
+	 * @param Request $request
+	 *
+	 * @return JsonResponse
+	 */
+	public function create(Request $request)
+	{
+		$body = json_decode($request->getContent(), true);
+
+		$errors = ParamsChecker::check(['name'], $body);
+
+		if (count($errors) > 0) return $this->json(ErrorHelper::requestWrongParams($errors));
+
+		$tagName = $body['name'];
+		$tagRuName = null;
+		if (key_exists('ru_name', $body) && !empty(trim($body['ru_name']))) {
+			$tagRuName = $body['ru_name'];
+		}
+
+		$tag = $this->getDoctrine()->getRepository(Tag::class)->findBy([
+			'name' => $tagName,
+		]);
+
+		if ($tag) return $this->json(ErrorHelper::tagAlreadyCreated());
+
+		$newTag = (new Tag())
+			->setName($tagName)
+			->setRuName($tagRuName);
+
+		try {
+			$this->getDoctrine()->getManager()->persist($newTag);
+			$this->getDoctrine()->getManager()->flush();
+
+			$tagsList = $this->getDoctrine()->getRepository(Tag::class)->findAll();
+			$tags['items'] = array_map(function ($tag) {
+				return $tag->export();
+			}, $tagsList);
+			$tags['count'] = count($tags['items']);
+			asort($tags);
+
+			$this->cacheController->setCache('tags.all', $tags);
+
+		} catch (Exception $exception) {
+			return $this->json(['error' => true, 'code' => $exception->getCode(), 'message' => 'server error']);
+		}
+
+		return $this->json(['success' => true, 'tag_id' => $newTag->getId()]);
 	}
 }

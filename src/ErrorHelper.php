@@ -21,6 +21,7 @@ class ErrorHelper
 	const FILE_TYPE_NOT_ALLOWED = 12;
 	const UPLOAD_ERROR = 13;
 	const POST_ALREADY_CREATED = 14;
+	const TAG_ALREADY_CREATED = 15;
 
 	public static function notValidRequestContentType(string $needType): array
 	{
@@ -133,12 +134,21 @@ class ErrorHelper
 		];
 	}
 
-	public static function postAllreadyCreated(): array
+	public static function postAlreadyCreated(): array
 	{
 		return [
 			'error' => true,
 			'code' => self::POST_ALREADY_CREATED,
 			'message' => 'post with this name already exists',
+		];
+	}
+
+	public static function tagAlreadyCreated(): array
+	{
+		return [
+			'error' => true,
+			'code' => self::TAG_ALREADY_CREATED,
+			'message'=> 'tag with this name already exists'
 		];
 	}
 }

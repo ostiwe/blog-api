@@ -173,10 +173,15 @@ class Post
 	public function export(): array
 	{
 		$tags = $this->tags->map(function ($tag) { return $tag->export(); })->toArray();
+		$userInfo = $this->creator->export();
 		return [
 			'id' => $this->id,
 			'creator' => [
-				'login' => $this->creator->getLogin(),
+				'id' => $userInfo['id'],
+				'login' =>$userInfo['login'],
+				'avatar' => $userInfo['avatar'],
+				'posts' => $userInfo['posts'],
+				'comments' => $userInfo['comments'],
 			],
 			'published' => $this->published,
 			'title' => $this->title,

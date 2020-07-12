@@ -76,6 +76,20 @@ class Tag
 		return $this->posts;
 	}
 
+	/**
+	 * @return Post[]
+	 */
+	public function getRealizedPosts()
+	{
+		$time = time();
+		$posts = [];
+		/** @var Post $post */
+		foreach ($this->posts as $post) {
+			if ($post->getPublished() <= $time) $posts[] = $post->export();
+		}
+		return $posts;
+	}
+
 	public function addPost(Post $post): self
 	{
 		if (!$this->posts->contains($post)) {

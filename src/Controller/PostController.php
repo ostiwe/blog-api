@@ -83,7 +83,7 @@ class PostController extends AbstractController
 			'title' => $body['title'],
 		]);
 
-		if ($findPost) return $this->json(ErrorHelper::postAllreadyCreated());
+		if ($findPost) return $this->json(ErrorHelper::postAlreadyCreated());
 
 		if ($this->cacheController->inCache('tags.allid')) {
 			$tagsIdList = $this->cacheController->getItemFromCache('tags.allid');

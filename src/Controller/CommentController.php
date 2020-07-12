@@ -61,7 +61,6 @@ class CommentController extends AbstractController
 		return $this->json($comments);
 	}
 
-
 	/**
 	 * @Route("/comments/{postID}",methods={"POST"})
 	 * @param Request        $request
@@ -97,6 +96,16 @@ class CommentController extends AbstractController
 		$this->updateCommentsCache($postID);
 		return $this->json(['success' => true, 'comment_id' => $comment->getId()]);
 	}
+
+// TODO: Фильтр по недавно добавленным, к модерации
+//	/**
+//	 * @Route("/comments/filter", methods={"GET"})
+//	 * @param Request $request
+//	 */
+//	public function filter(Request $request)
+//	{
+//
+//	}
 
 	private function updateCommentsCache($postID)
 	{

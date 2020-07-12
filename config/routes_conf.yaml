@@ -35,3 +35,8 @@ routes:
     content_type:
     permission: 256
     token_need: true
+
+  app_tag_create:
+    content_type: json
+    permission: 4
+    token_need: true

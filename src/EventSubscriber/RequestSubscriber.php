@@ -35,13 +35,16 @@ class RequestSubscriber extends AbstractController implements EventSubscriberInt
 			return;
 		}
 		$this->setRoutesConfig();
-
 		$this->request = $event->getRequest();
 		$res = null;
 		$routeName = $this->request->attributes->get('_route');
 		$requestContentType = $this->request->getContentType();
 
-		if (!$this->hasInConfig($routeName)) return;
+		if (!$this->hasInConfig($routeName)) {
+			$this->setAccessTokenForPublicMethods();
+			return;
+		}
+
 		$needRequestContentType = $this->routesConfig['routes'][$routeName]['content_type'];
 
 		if ($needRequestContentType !== null && ($needRequestContentType !== $requestContentType)) {
@@ -61,6 +64,26 @@ class RequestSubscriber extends AbstractController implements EventSubscriberInt
 		if ($this->needAccessToken($routeName) && $res['error']) {
 			$event->setResponse($this->json($res));
 		}
+	}
+
+	private function setAccessTokenForPublicMethods()
+	{
+		if (!$this->request->headers->has('token')) return;
+
+		$token = $this->request->headers->get('token');
+
+		if ($token === '') return;
+
+		/** @var AccessToken $accessToken */
+		$accessToken = $this
+			->getDoctrine()
+			->getRepository(AccessToken::class)
+			->findOneBy(['value' => $token]);
+
+		if (!$accessToken) return;
+
+		$this->storage->set('token', $accessToken);
+		return;
 	}
 
 	private function hasInConfig($routeName): bool
