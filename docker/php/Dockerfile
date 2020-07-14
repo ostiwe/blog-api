@@ -1,4 +1,4 @@
-FROM php:7.4-fpm
+FROM php:7.4-fpm-buster
 
 RUN pecl install redis-5.3.0   \
     && pecl install xdebug-2.9.6 \
