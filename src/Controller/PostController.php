@@ -138,16 +138,11 @@ class PostController extends AbstractController
 	public function getPost($id)
 	{
 		if ((int)$id === 0) return $this->json(ErrorHelper::invalidRequest());
-
-		if ($this->cacheController->inCache("posts.post_$id")) {
-			return $this->json($this->cacheController->getItemFromCache("posts.post_$id"));
-		}
-
+		
 		$post = $this->getDoctrine()->getRepository(Post::class)->find($id);
 		if (!$post || $post->getPublished() > time()) return $this->json(ErrorHelper::postNotFound());
 
 		$res = $post->export();
-		$this->cacheController->setCache("posts.post_$id", $res);
 
 		return $this->json($res);
 	}
@@ -170,10 +165,14 @@ class PostController extends AbstractController
 		if ((int)$postId <= 0) return $this->json(ErrorHelper::invalidRequest());
 
 		$post = $this->getDoctrine()->getRepository(Post::class)->find($postId);
-
 		if (!$post) return $this->json(ErrorHelper::postNotFound());
 
 		try {
+			$comments = $post->getComments();
+			foreach ($comments as $comment) {
+				$this->getDoctrine()->getManager()->remove($comment);
+			}
+
 			$this->getDoctrine()->getManager()->remove($post);
 			$this->getDoctrine()->getManager()->flush();
 

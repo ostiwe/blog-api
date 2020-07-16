@@ -31,15 +31,7 @@ class UserRepository extends ServiceEntityRepository
 		$query = $this->_em->createQuery($sql)
 			->setFirstResult($offset)
 			->setMaxResults($limit);
-		$res = [];
-		$paginator = new Paginator($query, $fetchJoinCollection = true);
-
-		/** @var User $item */
-		foreach ($paginator as $item) {
-			$res[] = $item->export();
-		}
-
-		return $res;
+		return new Paginator($query, $fetchJoinCollection = true);
 	}
 
 	public function getCount()
@@ -48,6 +40,28 @@ class UserRepository extends ServiceEntityRepository
 		return $this->_em->createQuery($sql)->execute()[0][1];
 	}
 
+	public function search($params = [])
+	{
+		$result = $this->_em->getRepository(User::class)->createQueryBuilder('u');
+		foreach ($params as $key => $value) {
+			$searchKey = $this->dashesToCamelCase($key);
+			$result->andWhere("u.$searchKey LIKE :$searchKey");
+			$result->setParameter($searchKey, "%{$value}%");
+		}
+		return $result->getQuery()->getResult();
+	}
+
+	private function dashesToCamelCase($string, $capitalizeFirstCharacter = false)
+	{
+
+		$str = str_replace('_', '', ucwords($string, '_'));
+
+		if (!$capitalizeFirstCharacter) {
+			$str = lcfirst($str);
+		}
+
+		return $str;
+	}
 	// /**
 	//  * @return User[] Returns an array of User objects
 	//  */

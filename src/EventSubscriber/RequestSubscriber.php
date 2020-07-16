@@ -68,10 +68,9 @@ class RequestSubscriber extends AbstractController implements EventSubscriberInt
 
 	private function setAccessTokenForPublicMethods()
 	{
-		if (!$this->request->headers->has('token')) return;
+		if (!$this->request->headers->has('token') && !$this->request->query->has('access_token')) return;
 
-		$token = $this->request->headers->get('token');
-
+		$token = $this->request->headers->get('token') ?? $this->request->query->get('access_token');
 		if ($token === '') return;
 
 		/** @var AccessToken $accessToken */

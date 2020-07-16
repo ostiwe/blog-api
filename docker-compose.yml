@@ -17,7 +17,7 @@ services:
       - 80:80
 
   php-fpm:
-    build: .
+    build: ./docker/php/Dockerfile
     container_name: php-fpm-7.4
     volumes:
       - .:/usr/share/nginx/html

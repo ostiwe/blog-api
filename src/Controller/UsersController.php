@@ -15,11 +15,75 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class UsersController extends AbstractController
 {
+
+	private RequestStorage $storage;
+
+	/**
+	 * @Route("/users")
+	 * @param Request        $request
+	 *
+	 * @param RequestStorage $storage
+	 *
+	 * @return JsonResponse
+	 */
+	public function list(Request $request, RequestStorage $storage)
+	{
+		$query = $request->query->all();
+		$limit = 10;
+		$page = 1;
+
+		$this->storage = $storage;
+
+		if (in_array('page', $query)) $page = (int)$query['page'];
+
+		if ((int)$page <= 0) return $this->json(ErrorHelper::invalidRequest());
+
+
+		if (in_array('limit', $query) && (int)$query['limit'] > 0) $limit = (int)$query['limit'];
+
+		$usersList = $this->getDoctrine()->getRepository(User::class)->paginate($page, $limit);
+		$users = [];
+		foreach ($usersList as $user) {
+			$users[] = $this->removeConfidentialInfo($user);
+		}
+
+
+		return $this->json(['success' => true, 'items' => $users]);
+	}
+
 	/** @Route("/users/count",methods={"GET"}) */
 	public function count()
 	{
 		$users = $this->getDoctrine()->getRepository(User::class)->getCount();
 		return $this->json(['success' => true, 'count' => $users]);
+	}
+
+	/**
+	 * @Route("/users/search", methods={"GET"})
+	 * @param Request        $request
+	 *
+	 * @param RequestStorage $storage
+	 *
+	 * @return JsonResponse
+	 */
+	public function search(Request $request, RequestStorage $storage)
+	{
+		$query = $request->query->all();
+
+		$this->storage = $storage;
+
+		$params = $this->prepareSearchParams($query);
+		$search = $this->getDoctrine()->getRepository(User::class)->search($params);
+
+		$users = [];
+//		var_dump($search);
+//		if (!$search) return $this->json(ErrorHelper::userNotFound());
+
+		foreach ($search as $item) {
+			$users[] = $this->removeConfidentialInfo($item);
+		}
+
+		return $this->json(['success' => true, 'items' => $users]);
 	}
 
 	/**
@@ -43,39 +107,32 @@ class UsersController extends AbstractController
 		return $this->json($info);
 	}
 
-	/**
-	 * @Route("/users")
-	 * @param Request        $request
-	 *
-	 * @param RequestStorage $storage
-	 *
-	 * @return JsonResponse
-	 */
-	public function list(Request $request, RequestStorage $storage)
+
+	private function prepareSearchParams($query = []): array
 	{
-		$query = $request->query->all();
-		$limit = 10;
-		$page = 1;
+		$maySearch = [
+			'first_name',
+			'last_name',
+			'login',
+			'email',
+		];
+		$prepared = [];
 
-		$token = $storage->get('token');
+		foreach ($query as $key => $value) {
+			if (in_array($key, $maySearch) && !empty($value)) $prepared[$key] = $value;
+		}
+		return $prepared;
+	}
 
-		if (in_array('page', $query)) $page = (int)$query['page'];
-
-		if ((int)$page <= 0) return $this->json(ErrorHelper::invalidRequest());
-
-
-		if (in_array('limit', $query) && (int)$query['limit'] > 0) $limit = (int)$query['limit'];
-
-		$users = $this->getDoctrine()->getRepository(User::class)->paginate($page, $limit);
+	private function removeConfidentialInfo(User $user)
+	{
+		$token = $this->storage->get('token');
+		$exportedUser = $user->export();
 
 		/** @var  AccessToken $token */
 		if (!$token || !(($token->getMask() & User::CAN_GET_FULL_USER_INFO) !== User::CAN_GET_FULL_USER_INFO)) {
-			$users = array_map(function ($user) {
-				unset($user['email'], $user['mask']);
-				return $user;
-			}, $users);
+			unset($exportedUser['email'], $exportedUser['mask']);
 		}
-
-		return $this->json(['success' => true, 'items' => $users]);
+		return $exportedUser;
 	}
 }

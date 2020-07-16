@@ -1,0 +1,11 @@
+{
+    "laminas/laminas-zendframework-bridge": {
+        "version": "1.0.4"
+    },
+    "php": {
+        "version": "7.4"
+    },
+    "webimpress/safe-writer": {
+        "version": "2.0.1"
+    }
+}
